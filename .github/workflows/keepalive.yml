@@ -1,0 +1,32 @@
+# Pings the deployed app so a visitor is less likely to meet a cold container.
+#
+# A free Render service sleeps after about 15 minutes idle, and waking it takes
+# roughly half a minute. Pinging every 10 minutes keeps it awake, at the cost of
+# spending the plan's monthly instance hours continuously rather than on demand.
+# Disable this workflow if you would rather keep those hours in reserve.
+#
+# Set APP_URL as a repository variable (Settings, Secrets and variables,
+# Actions, Variables) to your deployed URL.
+
+name: keepalive
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub may delay scheduled runs when its queues are busy,
+    # so treat this as best effort rather than a guarantee.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the app
+        run: |
+          if [ -z "${{ vars.APP_URL }}" ]; then
+            echo "APP_URL is not set; nothing to ping."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 120 "${{ vars.APP_URL }}")
+          echo "HTTP $code from ${{ vars.APP_URL }}"
+          test "$code" = "200"

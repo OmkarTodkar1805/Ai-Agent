@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: doc-agent
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      # Set the value in the Render dashboard, not here.
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Keeps peak memory inside the 512MB free plan.
+      - key: EMBED_BATCH_SIZE
+        value: "4"
+      # Smaller cap than the default, for the same reason.
+      - key: MAX_UPLOAD_MB
+        value: "4"
+      - key: WARM_ON_START
+        value: "1"
